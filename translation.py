@@ -4,8 +4,8 @@ import asyncio
 from googletrans import Translator
 
 # Load dữ liệu
-input_file = "./output_ocr/output_ocr_raw.xlsx"
-output_file = "./output_ocr/output_ocr_translated.xlsx"
+input_file = "output_ocr/output_ocr_raw.xlsx"
+output_file = "output_ocr/output_ocr_translated.xlsx"
 
 df = pd.read_excel(input_file)
 

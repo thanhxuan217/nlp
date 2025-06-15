@@ -132,7 +132,7 @@ for idx, row in df_grouped.iterrows():
     rec_polys = row['Image box']        
 
     # Đọc ảnh gốc
-    original_image = cv2.imread("./resized_img/page"+ str(page_number) +".png")
+    original_image = cv2.imread("resized_img/page"+ str(page_number) +".png")
     if original_image is None:
         print(f"❌ Không thể đọc ảnh: page{page_number}.png")
         continue
@@ -184,7 +184,7 @@ for idx, row in df_grouped.iterrows():
 
     rec_polys = row['Image box']   
 
-    original_image = cv2.imread("./resized_img/page"+ str(page_number) +".png")
+    original_image = cv2.imread("resized_img/page"+ str(page_number) +".png")
     if original_image is None:
         continue
     
@@ -194,8 +194,6 @@ for idx, row in df_grouped.iterrows():
     cv2.rectangle(overlay, (0, 0), (bbox_image.shape[1], bbox_image.shape[0]), (0, 0, 0), -1)
     bbox_image = cv2.addWeighted(bbox_image, 0.7, overlay, 0.3, 0)
     
-    box_num = len(rec_polys)
-
     for i, poly in enumerate(rec_polys):
         # Lấy màu riêng cho mỗi box
         box_color = get_box_color(i)
@@ -216,15 +214,13 @@ for idx, row in df_grouped.iterrows():
         
         # Hiển thị từng tọa độ trên từng dòng cho dễ đọc
         lines = [
-            f"B{box_num}:",
+            f"B{i+1}:",
             f"TL:({poly[0][0]},{poly[0][1]})",  # Top Left
             f"TR:({poly[1][0]},{poly[1][1]})",  # Top Right  
             f"BR:({poly[2][0]},{poly[2][1]})",  # Bottom Right
             f"BL:({poly[3][0]},{poly[3][1]})"   # Bottom Left
         ]
 
-        box_num = box_num - 1
-        
         # Tính kích thước background cần thiết
         max_width = 0
         line_height = 15

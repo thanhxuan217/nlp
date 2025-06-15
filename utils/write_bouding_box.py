@@ -4,7 +4,7 @@ import re
 import cv2
 import numpy as np
 
-input_dir = "./output_paddle"
+input_dir = "../output_paddle"
 
 # Regex để lấy số trang từ tên file kiểu 'page5.json'
 page_pattern = re.compile(r"page(\d+)_res\.json")
@@ -130,7 +130,7 @@ for filename in json_files:
     rec_polys = data.get("rec_polys", [])
 
     # Đọc ảnh gốc
-    original_image = cv2.imread("./resized_img/page"+ str(page_number) +".png")
+    original_image = cv2.imread("../resized_img/page"+ str(page_number) +".png")
     if original_image is None:
         print(f"❌ Không thể đọc ảnh: page{page_number}.png")
         continue
@@ -167,7 +167,7 @@ for filename in json_files:
     
     # Tạo ảnh ghép side-by-side
     combined_clean = create_side_by_side_image(original_image, bbox_image)
-    cv2.imwrite("output_write_box/page"+ str(page_number) +"_sidebyside_clean.jpg", combined_clean)
+    cv2.imwrite("../output_write_box/page"+ str(page_number) +"_sidebyside_clean.jpg", combined_clean)
 
 # VERSION 2: DETAILED - Hiển thị đầy đủ tọa độ
 print("\n🔄 Tạo version chi tiết...")
@@ -182,7 +182,7 @@ for filename in json_files:
             continue
         
     rec_polys = data.get("rec_polys", [])
-    original_image = cv2.imread("./resized_img/page"+ str(page_number) +".png")
+    original_image = cv2.imread("../resized_img/page"+ str(page_number) +".png")
     if original_image is None:
         continue
     
@@ -247,7 +247,7 @@ for filename in json_files:
     
     # Tạo ảnh ghép side-by-side
     combined_detailed = create_side_by_side_image(original_image, bbox_image)
-    cv2.imwrite("output_write_box/page"+ str(page_number) +"_sidebyside_detailed.jpg", combined_detailed)
+    cv2.imwrite("../output_write_box/page"+ str(page_number) +"_sidebyside_detailed.jpg", combined_detailed)
 
 print("✅ Hoàn thành! Kiểm tra:")
 print("   - *_sidebyside_clean.jpg: Ảnh ghép với số box")

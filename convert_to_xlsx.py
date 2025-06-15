@@ -3,8 +3,9 @@ import csv
 import os
 import re
 import pandas as pd
+from utils.sort_poly import sort_rec_texts_polys
 
-input_dir = "./output_paddle"
+input_dir = "output_paddle"
 output_rows = []
 
 # Các thành phần mặc định cho mã số
@@ -24,8 +25,6 @@ def generate_id(domain, subdomain, genre, file_code, chapter, page, box_index):
 
 # Regex để lấy số trang từ tên file kiểu 'page5.json'
 page_pattern = re.compile(r"page(\d+)_res\.json")
-
-input_dir = "./output_paddle"
 
 # Lọc và sắp xếp file theo số trang
 json_files = sorted(
@@ -47,15 +46,13 @@ for filename in json_files:
     rec_polys = data.get("rec_polys", [])
     rec_texts = data.get("rec_texts", [])
 
-    combined = list(zip(rec_polys, rec_texts))
-    combined.sort(key=lambda item: (-item[0][0][0], -item[0][0][1]))  # x1 giảm dần, y1 giảm dần
-    rec_polys, rec_texts = zip(*combined) if combined else ([], [])
+    sorted_texts, sorted_polys = sort_rec_texts_polys(rec_texts, rec_polys)
     
     # Read from right to left
     for idx in range(len(rec_polys)):
     # for idx in range(len(rec_polys)):
-        box = rec_polys[idx]
-        text = rec_texts[idx]
+        box = sorted_polys[idx]
+        text = sorted_texts[idx]
         id_code = generate_id(DOMAIN, SUBDOMAIN, GENRE, FILE_CODE, CHAPTER, page_number, idx + 1)
 
         row = {
@@ -71,7 +68,7 @@ for filename in json_files:
 
 # Xuất CSV
 df = pd.DataFrame(output_rows)
-df.to_excel("./output_ocr/output_ocr_raw.xlsx", index=False)
+df.to_excel("output_ocr/output_ocr_raw.xlsx", index=False)
 print(f"✅ Xuất {len(output_rows)} dòng vào file: output_ocr_raw.xlsx")
 
 
