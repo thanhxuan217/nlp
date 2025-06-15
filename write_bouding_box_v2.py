@@ -44,9 +44,18 @@ def get_box_color(box_index):
     ]
     return colors[box_index % len(colors)]
 
-def find_best_text_position(poly, box_index, all_polys, image_shape):
-    """Tìm vị trí tốt nhất để đặt text - ưu tiên trên/dưới cho các box gần nhau"""
-    # Lấy bounding box của polygon hiện tại
+def check_text_overlap(text_pos, existing_positions, min_distance=50):
+    """Kiểm tra xem vị trí text có bị trùng với các vị trí đã có không"""
+    text_x, text_y = text_pos
+    for existing_x, existing_y in existing_positions:
+        distance = np.sqrt((text_x - existing_x)**2 + (text_y - existing_y)**2)
+        if distance < min_distance:
+            return True
+    return False
+
+def find_non_overlapping_position(poly, box_index, existing_positions, image_shape, attempt=0):
+    """Tìm vị trí không bị trùng cho text"""
+    # Lấy bounding box của polygon
     x_coords = [point[0] for point in poly]
     y_coords = [point[1] for point in poly]
     
@@ -54,44 +63,95 @@ def find_best_text_position(poly, box_index, all_polys, image_shape):
     min_y, max_y = min(y_coords), max(y_coords)
     center_x, center_y = (min_x + max_x) // 2, (min_y + max_y) // 2
     
-    # Tìm các box gần nhau (trong bán kính 100 pixel)
-    nearby_boxes = []
-    for i, other_poly in enumerate(all_polys):
-        if i != box_index:
-            other_x_coords = [point[0] for point in other_poly]
-            other_y_coords = [point[1] for point in other_poly]
-            other_center_x = (min(other_x_coords) + max(other_x_coords)) // 2
-            other_center_y = (min(other_y_coords) + max(other_y_coords)) // 2
-            
-            distance = np.sqrt((center_x - other_center_x)**2 + (center_y - other_center_y)**2)
-            if distance < 100:  # Khoảng cách ngưỡng để coi là "gần nhau"
-                nearby_boxes.append((i, other_center_y))
+    # Danh sách các vị trí ưu tiên để thử
+    positions_to_try = [
+        (center_x, min_y - 20),           # Trên giữa
+        (center_x, max_y + 30),           # Dưới giữa
+        (min_x - 30, center_y),           # Trái giữa
+        (max_x + 30, center_y),           # Phải giữa
+        (min_x - 30, min_y - 20),         # Trên trái
+        (max_x + 30, min_y - 20),         # Trên phải
+        (min_x - 30, max_y + 30),         # Dưới trái
+        (max_x + 30, max_y + 30),         # Dưới phải
+        (center_x - 50, min_y - 40),      # Xa hơn - trên trái
+        (center_x + 50, min_y - 40),      # Xa hơn - trên phải
+        (center_x - 50, max_y + 50),      # Xa hơn - dưới trái
+        (center_x + 50, max_y + 50),      # Xa hơn - dưới phải
+    ]
     
-    # Xác định vị trí text dựa trên các box gần nhau
-    if nearby_boxes:
-        # Sắp xếp các box gần theo tọa độ Y
-        nearby_boxes.sort(key=lambda x: x[1])
+    for pos in positions_to_try:
+        text_x, text_y = pos
         
-        # Tìm vị trí của box hiện tại trong danh sách
-        current_rank = 0
-        for idx, (other_box_idx, other_y) in enumerate(nearby_boxes):
-            if other_y < center_y:
-                current_rank += 1
+        # Đảm bảo không vượt ra ngoài ảnh
+        text_x = max(30, min(text_x, image_shape[1] - 50))
+        text_y = max(30, min(text_y, image_shape[0] - 30))
         
-        # Quyết định vị trí text dựa trên thứ hạng
-        if current_rank % 2 == 0:  # Box chẵn -> text ở trên
-            text_x, text_y = center_x, min_y - 15
-        else:  # Box lẻ -> text ở dưới
-            text_x, text_y = center_x, max_y + 25
-    else:
-        # Nếu không có box nào gần, dùng vị trí mặc định (trên)
-        text_x, text_y = center_x, min_y - 15
+        # Kiểm tra trùng lặp
+        if not check_text_overlap((text_x, text_y), existing_positions):
+            return text_x, text_y
     
-    # Đảm bảo không vượt ra ngoài ảnh
-    text_x = max(10, min(text_x, image_shape[1] - 150))
-    text_y = max(20, min(text_y, image_shape[0] - 20))
+    # Nếu không tìm được vị trí không trùng, dùng vị trí random
+    import random
+    for _ in range(10):
+        text_x = random.randint(50, image_shape[1] - 100)
+        text_y = random.randint(50, image_shape[0] - 50)
+        if not check_text_overlap((text_x, text_y), existing_positions):
+            return text_x, text_y
     
-    return text_x, text_y
+    # Cuối cùng, dùng vị trí mặc định với offset
+    return center_x + (attempt * 20), min_y - 20 - (attempt * 15)
+
+def draw_arrow(image, start_point, end_point, color, thickness=2):
+    """Vẽ mũi tên từ start_point đến end_point"""
+    # Vẽ đường thẳng
+    cv2.line(image, start_point, end_point, color, thickness)
+    
+    # Tính toán góc cho mũi tên
+    angle = np.arctan2(end_point[1] - start_point[1], end_point[0] - start_point[0])
+    
+    # Độ dài và góc của mũi tên
+    arrow_length = 10
+    arrow_angle = np.pi / 6  # 30 độ
+    
+    # Tính toán điểm mũi tên
+    arrow_p1 = (
+        int(end_point[0] - arrow_length * np.cos(angle - arrow_angle)),
+        int(end_point[1] - arrow_length * np.sin(angle - arrow_angle))
+    )
+    arrow_p2 = (
+        int(end_point[0] - arrow_length * np.cos(angle + arrow_angle)),
+        int(end_point[1] - arrow_length * np.sin(angle + arrow_angle))
+    )
+    
+    # Vẽ mũi tên
+    cv2.line(image, end_point, arrow_p1, color, thickness)
+    cv2.line(image, end_point, arrow_p2, color, thickness)
+
+def draw_text_with_background(image, text, position, font_scale, color, bg_color, thickness=1):
+    """Vẽ text với background"""
+    text_x, text_y = position
+    
+    # Tính kích thước text
+    text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)[0]
+    
+    # Vẽ background
+    padding = 4
+    cv2.rectangle(image, 
+                 (text_x - padding, text_y - text_size[1] - padding),
+                 (text_x + text_size[0] + padding, text_y + padding),
+                 bg_color, -1)
+    
+    # Vẽ viền background
+    cv2.rectangle(image, 
+                 (text_x - padding, text_y - text_size[1] - padding),
+                 (text_x + text_size[0] + padding, text_y + padding),
+                 color, 1)
+    
+    # Vẽ text
+    cv2.putText(image, text, (text_x, text_y), 
+               cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), thickness + 1, cv2.LINE_AA)
+    cv2.putText(image, text, (text_x, text_y), 
+               cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness, cv2.LINE_AA)
 
 def create_side_by_side_image(original_image, bbox_image):
     """Tạo ảnh ghép: bbox bên trái, original bên phải"""
@@ -119,7 +179,6 @@ def create_side_by_side_image(original_image, bbox_image):
     
     return combined_image
 
-
 # Lặp qua các file JSON
 for idx, row in df_grouped.iterrows():
     filename = row['Uploaded Filename']
@@ -142,7 +201,9 @@ for idx, row in df_grouped.iterrows():
     
     print(f"📄 Xử lý trang {page_number} với {len(rec_polys)} bounding boxes")
     
-    # VERSION 1: CLEAN - Chỉ hiển thị số box
+    # VERSION 1: CLEAN - Chỉ hiển thị số box với mũi tên
+    existing_text_positions = []
+    
     for i, poly in enumerate(rec_polys):
         # Lấy màu riêng cho mỗi box
         box_color = get_box_color(i)
@@ -151,27 +212,30 @@ for idx, row in df_grouped.iterrows():
         pts = np.array(poly, np.int32).reshape((-1,1,2))
         cv2.polylines(bbox_image, [pts], isClosed=True, color=box_color, thickness=2)
         
-        # Vẽ các góc với màu tương ứng nhưng đậm hơn
-        # for j, (x, y) in enumerate(poly):
-        #     # Làm đậm màu cho các góc
-        #     corner_color = tuple(max(0, int(c * 0.7)) for c in box_color)
-        #     cv2.circle(bbox_image, (x, y), 4, corner_color, -1)
-        #     cv2.circle(bbox_image, (x, y), 4, (255,255,255), 1)  # Viền trắng
+        # Tìm vị trí text không bị trùng
+        text_x, text_y = find_non_overlapping_position(poly, i, existing_text_positions, bbox_image.shape)
+        existing_text_positions.append((text_x, text_y))
         
-        # Sử dụng thuật toán mới để xác định vị trí text
-        text_x, text_y = find_best_text_position(poly, i, rec_polys, bbox_image.shape)
+        # Tính center của box để vẽ mũi tên
+        x_coords = [point[0] for point in poly]
+        y_coords = [point[1] for point in poly]
+        center_x = (min(x_coords) + max(x_coords)) // 2
+        center_y = (min(y_coords) + max(y_coords)) // 2
         
-        # Text với màu tương ứng
-        cv2.putText(bbox_image, f"{i+1}", (text_x, text_y), 
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2, cv2.LINE_AA)
-        cv2.putText(bbox_image, f"{i+1}", (text_x, text_y), 
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, box_color, 1, cv2.LINE_AA)
+        # Vẽ mũi tên từ text đến center của box
+        arrow_color = tuple(max(0, int(c * 0.8)) for c in box_color)  # Màu đậm hơn một chút
+        draw_arrow(bbox_image, (text_x + 15, text_y - 10), (center_x, center_y), arrow_color, 2)
+        
+        # Vẽ text với background
+        text = f"{i+1}"
+        bg_color = tuple(min(255, int(c * 0.3)) for c in box_color)  # Màu nhạt làm background
+        draw_text_with_background(bbox_image, text, (text_x, text_y), 0.7, box_color, bg_color, 1)
     
     # Tạo ảnh ghép side-by-side
     combined_clean = create_side_by_side_image(original_image, bbox_image)
     cv2.imwrite("output_write_box/page"+ str(page_number) +"_sidebyside_clean.jpg", combined_clean)
 
-# VERSION 2: DETAILED - Hiển thị đầy đủ tọa độ
+# VERSION 2: DETAILED - Hiển thị đầy đủ tọa độ với mũi tên
 print("\n🔄 Tạo version chi tiết...")
 
 for idx, row in df_grouped.iterrows():
@@ -194,6 +258,8 @@ for idx, row in df_grouped.iterrows():
     cv2.rectangle(overlay, (0, 0), (bbox_image.shape[1], bbox_image.shape[0]), (0, 0, 0), -1)
     bbox_image = cv2.addWeighted(bbox_image, 0.7, overlay, 0.3, 0)
     
+    existing_text_positions = []
+    
     for i, poly in enumerate(rec_polys):
         # Lấy màu riêng cho mỗi box
         box_color = get_box_color(i)
@@ -202,15 +268,15 @@ for idx, row in df_grouped.iterrows():
         pts = np.array(poly, np.int32).reshape((-1,1,2))
         cv2.polylines(bbox_image, [pts], isClosed=True, color=box_color, thickness=3)
         
-        # Vẽ các góc với màu tương ứng
-        # for j, (x, y) in enumerate(poly):
-        #     # Làm đậm màu cho các góc
-        #     corner_color = tuple(max(0, int(c * 0.7)) for c in box_color)
-        #     cv2.circle(bbox_image, (x, y), 6, corner_color, -1)
-        #     cv2.circle(bbox_image, (x, y), 6, (255,255,255), 2)  # Viền trắng
+        # Tìm vị trí text không bị trùng
+        text_x, text_y = find_non_overlapping_position(poly, i, existing_text_positions, bbox_image.shape, attempt=i)
+        existing_text_positions.append((text_x, text_y))
         
-        # Sử dụng thuật toán mới để xác định vị trí text
-        text_x, text_y = find_best_text_position(poly, i, rec_polys, bbox_image.shape)
+        # Tính center của box để vẽ mũi tên
+        x_coords = [point[0] for point in poly]
+        y_coords = [point[1] for point in poly]
+        center_x = (min(x_coords) + max(x_coords)) // 2
+        center_y = (min(y_coords) + max(y_coords)) // 2
         
         # Hiển thị từng tọa độ trên từng dòng cho dễ đọc
         lines = [
@@ -237,6 +303,12 @@ for idx, row in df_grouped.iterrows():
         cv2.rectangle(bbox_image, (text_x-2, text_y-12), 
                      (text_x+max_width+4, text_y+total_height-5), box_color, 2)
         
+        # Vẽ mũi tên từ góc text box đến center của polygon
+        arrow_start_x = text_x + max_width + 4
+        arrow_start_y = text_y + total_height // 2
+        arrow_color = tuple(max(0, int(c * 0.9)) for c in box_color)
+        draw_arrow(bbox_image, (arrow_start_x, arrow_start_y), (center_x, center_y), arrow_color, 2)
+        
         # Vẽ từng dòng text
         for j, line in enumerate(lines):
             line_y = text_y + (j * line_height)
@@ -248,7 +320,9 @@ for idx, row in df_grouped.iterrows():
     cv2.imwrite("output_write_box/page"+ str(page_number) +"_sidebyside_detailed.jpg", combined_detailed)
 
 print("✅ Hoàn thành! Kiểm tra:")
-print("   - *_sidebyside_clean.jpg: Ảnh ghép với số box")
-print("   - *_sidebyside_detailed.jpg: Ảnh ghép với tọa độ chi tiết")
+print("   - *_sidebyside_clean.jpg: Ảnh ghép với số box và mũi tên")
+print("   - *_sidebyside_detailed.jpg: Ảnh ghép với tọa độ chi tiết và mũi tên")
 print("   - Bên trái: Bounding boxes")
 print("   - Bên phải: Ảnh gốc")
+print("   - Các số thứ tự không còn bị trùng lên nhau")
+print("   - Mũi tên chỉ từ số thứ tự đến box tương ứng")
