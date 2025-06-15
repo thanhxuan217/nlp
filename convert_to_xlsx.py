@@ -45,20 +45,24 @@ for filename in json_files:
 
     rec_polys = data.get("rec_polys", [])
     rec_texts = data.get("rec_texts", [])
+    rec_scores = data.get("rec_scores", [])
 
-    sorted_texts, sorted_polys = sort_rec_texts_polys(rec_texts, rec_polys)
+    sorted_texts, sorted_polys, sorted_scores = sort_rec_texts_polys(rec_texts, rec_polys, rec_scores)
     
     # Read from right to left
     for idx in range(len(rec_polys)):
     # for idx in range(len(rec_polys)):
         box = sorted_polys[idx]
         text = sorted_texts[idx]
+        score = sorted_scores[idx]
+
         id_code = generate_id(DOMAIN, SUBDOMAIN, GENRE, FILE_CODE, CHAPTER, page_number, idx + 1)
 
         row = {
             "ID": id_code,
             "Image box": str(box),
             "Hán char": text,
+            "Score": score,
             "Âm Hán Việt": "",
             "Nghĩa thuần Việt": "",
             "Uploaded Filename": filename.replace(".json", ".png")
@@ -68,7 +72,7 @@ for filename in json_files:
 
 # Xuất CSV
 df = pd.DataFrame(output_rows)
-df.to_excel("output_ocr/output_ocr_raw.xlsx", index=False)
-print(f"✅ Xuất {len(output_rows)} dòng vào file: output_ocr_raw.xlsx")
+df.to_excel("output_ocr/output_ocr_raw_2.xlsx", index=False)
+print(f"✅ Xuất {len(output_rows)} dòng vào file: output_ocr_raw_2.xlsx")
 
 

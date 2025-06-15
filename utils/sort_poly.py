@@ -5,14 +5,14 @@ def get_center(poly):
     y = sum([pt[1] for pt in poly]) / len(poly)
     return x, y
 
-def sort_rec_texts_polys(rec_texts, rec_polys):
+def sort_rec_texts_polys(rec_texts, rec_polys, rec_scores):
      # ======================
     # ✅ BƯỚC 1: Sắp từ phải sang trái
     # ======================
     items = []
-    for text, poly in zip(rec_texts, rec_polys):
+    for text, poly, score in zip(rec_texts, rec_polys, rec_scores):
         cx, cy = get_center(poly)
-        items.append({'text': text, 'poly': poly, 'cx': cx, 'cy': cy})
+        items.append({'text': text, 'poly': poly, 'score': score, 'cx': cx, 'cy': cy})
 
     # Sắp xếp toàn bộ theo cx giảm dần
     items.sort(key=lambda item: -item['cx'])
@@ -47,4 +47,5 @@ def sort_rec_texts_polys(rec_texts, rec_polys):
     # Tách kết quả
     sorted_texts = [item['text'] for item in final_items]
     sorted_polys = [item['poly'] for item in final_items]
-    return sorted_texts, sorted_polys
+    sorted_scores = [item['score'] for item in final_items]
+    return sorted_texts, sorted_polys, sorted_scores
