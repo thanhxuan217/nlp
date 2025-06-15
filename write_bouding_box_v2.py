@@ -216,15 +216,23 @@ for idx, row in df_grouped.iterrows():
         text_x, text_y = find_non_overlapping_position(poly, i, existing_text_positions, bbox_image.shape)
         existing_text_positions.append((text_x, text_y))
         
-        # Tính center của box để vẽ mũi tên
-        x_coords = [point[0] for point in poly]
-        y_coords = [point[1] for point in poly]
-        center_x = (min(x_coords) + max(x_coords)) // 2
-        center_y = (min(y_coords) + max(y_coords)) // 2
+        # Tìm góc gần nhất với text để vẽ mũi tên
+        text_center_x, text_center_y = text_x + 15, text_y - 10
         
-        # Vẽ mũi tên từ text đến center của box
+        # Tính khoảng cách từ text đến mỗi góc của box
+        min_distance = float('inf')
+        closest_corner = None
+        
+        for corner in poly:
+            corner_x, corner_y = corner[0], corner[1]
+            distance = np.sqrt((text_center_x - corner_x)**2 + (text_center_y - corner_y)**2)
+            if distance < min_distance:
+                min_distance = distance
+                closest_corner = (corner_x, corner_y)
+        
+        # Vẽ mũi tên từ text đến góc gần nhất
         arrow_color = tuple(max(0, int(c * 0.8)) for c in box_color)  # Màu đậm hơn một chút
-        draw_arrow(bbox_image, (text_x + 15, text_y - 10), (center_x, center_y), arrow_color, 2)
+        draw_arrow(bbox_image, (text_center_x, text_center_y), closest_corner, arrow_color, 2)
         
         # Vẽ text với background
         text = f"{i+1}"
