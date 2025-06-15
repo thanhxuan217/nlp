@@ -1,0 +1,7 @@
+output*
+**/output*
+auth.json
+vertex*
+resized_img
+temp
+venv
