@@ -20,34 +20,31 @@ def sort_rec_texts_polys(rec_texts, rec_polys):
     # ======================
     # ✅ BƯỚC 2: Sắp từng cột từ trên xuống dưới
     # ======================
-    # columns = defaultdict(list)
-    # column_threshold = 30  # khoảng cách X để xem là cùng một cột
-    # column_keys = []
+    columns = defaultdict(list)
+    column_threshold = 15  # khoảng cách X để xem là cùng một cột
+    column_keys = []
 
-    # for item in items:
-    #     assigned = False
-    #     for key in column_keys:
-    #         if abs(item['cx'] - key) < column_threshold:
-    #             columns[key].append(item)
-    #             assigned = True
-    #             break
-    #     if not assigned:
-    #         columns[item['cx']].append(item)
-    #         column_keys.append(item['cx'])
+    for item in items:
+        assigned = False
+        for key in column_keys:
+            if abs(item['cx'] - key) < column_threshold:
+                columns[key].append(item)
+                assigned = True
+                break
+        if not assigned:
+            columns[item['cx']].append(item)
+            column_keys.append(item['cx'])
 
-    # # Trong mỗi cột, sắp theo cy tăng dần
-    # for key in column_keys:
-    #     columns[key].sort(key=lambda item: item['cy'])
+    # Trong mỗi cột, sắp theo cy tăng dần
+    for key in column_keys:
+        columns[key].sort(key=lambda item: item['cy'])
 
-    # # Nối lại theo đúng thứ tự cột
-    # final_items = []
-    # for key in column_keys:
-    #     final_items.extend(columns[key])
+    # Nối lại theo đúng thứ tự cột
+    final_items = []
+    for key in column_keys:
+        final_items.extend(columns[key])
 
-    # # Tách kết quả
-    # sorted_texts = [item['text'] for item in final_items]
-    # sorted_polys = [item['poly'] for item in final_items]
-    sorted_texts = [item['text'] for item in items]
-    sorted_polys = [item['poly'] for item in items]
-
+    # Tách kết quả
+    sorted_texts = [item['text'] for item in final_items]
+    sorted_polys = [item['poly'] for item in final_items]
     return sorted_texts, sorted_polys
