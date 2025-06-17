@@ -14,6 +14,7 @@ SUBDOMAIN = "O"    # Mock
 GENRE = "A"        # Mock
 FILE_CODE = "023"  # Mock
 CHAPTER = "004"    # Tập số 04
+BOOK_NAME = "VN_HanVan_TieuThuyet_TapThanh_04_ThanhXuan"
 
 
 def generate_id(domain, subdomain, genre, file_code, chapter, page, box_index):
@@ -31,6 +32,13 @@ json_files = sorted(
     [f for f in os.listdir(input_dir) if page_pattern.match(f)],
     key=lambda f: int(page_pattern.match(f).group(1))
 )
+
+def generate_filename(book_name, page_number):
+    # Định dạng số trang về 3 chữ số, ví dụ: 1 -> 001
+    page_str = f"{page_number:03d}"
+    # Ghép tên file
+    filename = f"{book_name}_page{page_str}.png"
+    return filename
 
 # Lặp qua các file JSON
 for filename in json_files:
@@ -58,6 +66,7 @@ for filename in json_files:
 
         id_code = generate_id(DOMAIN, SUBDOMAIN, GENRE, FILE_CODE, CHAPTER, page_number, idx + 1)
 
+
         row = {
             "ID": id_code,
             "Image box": str(box),
@@ -65,7 +74,7 @@ for filename in json_files:
             "Score": score,
             "Âm Hán Việt": "",
             "Nghĩa thuần Việt": "",
-            "Uploaded Filename": filename.replace(".json", ".png")
+            "Image Name": generate_filename(BOOK_NAME, page_number)
         }
         output_rows.append(row)
 
