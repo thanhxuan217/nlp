@@ -9,10 +9,10 @@ input_dir = "output_paddle"
 output_rows = []
 
 # Các thành phần mặc định cho mã số
-DOMAIN = "L"       # Văn học
-SUBDOMAIN = "O"    # Mock
-GENRE = "A"        # Mock
-FILE_CODE = "023"  # Mock
+DOMAIN = "L"      
+SUBDOMAIN = "S"   
+GENRE = "E"       
+FILE_CODE = "001"  
 CHAPTER = "004"    # Tập số 04
 BOOK_NAME = "VN_HanVan_TieuThuyet_TapThanh_04_ThanhXuan"
 

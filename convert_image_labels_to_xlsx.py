@@ -6,10 +6,11 @@ from utils.sort_poly import sort_rec_texts_polys
 
 # --- Thông tin mặc định ---
 # Các thành phần mặc định cho mã số
+# ID = LSE_001
 DOMAIN = "L"       # Văn học
-SUBDOMAIN = "O"    # Mock
-GENRE = "A"        # Mock
-FILE_CODE = "023"  # Mock
+SUBDOMAIN = "S"    
+GENRE = "E"        
+FILE_CODE = "001"  
 CHAPTER = "004"    # Tập số 04
 BOOK_NAME = "VN_HanVan_TieuThuyet_TapThanh_04_ThanhXuan"
 
@@ -81,4 +82,4 @@ for line in data:
 df = pd.DataFrame(rows)
 os.makedirs("./output_paddle_ocr_label", exist_ok=True)
 df.to_excel("./output_paddle_ocr_label/output.xlsx", index=False)
-print("✅ Đã xuất file output.xlsx")
+print("✅ Đã xuất file ./output_paddle_ocr_label/output.xlsx")
