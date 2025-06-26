@@ -12,3 +12,4 @@ Python version: 3.10.0
 
 !!! Lưu ý quan trọng: Nhớ đổi tên file name cho đúng (Do bài này đang làm file VN_HánVăn_TiểuThuyết_TậpThành - 04)
 
+NOTE: Có thể chạy file write_bounding_box_v2.py để kiểm tra kết quả bouding box sau bước 8

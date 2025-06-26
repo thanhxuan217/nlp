@@ -1,0 +1,5 @@
+numpy==1.24.4
+pandas==1.5.3
+opencv-python-headless==4.11.0.86
+paddleocr==3.0.0
+PPOCRLabel==3.1.0
