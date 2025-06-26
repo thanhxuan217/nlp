@@ -29,7 +29,9 @@ def ocr_paddleocr(image_path):
         rec_scores = []
         rec_polys = []
         
-        print("Padde OCR: " +result)
+        for res in result:
+            print(res)
+
         if result and result[0]:
             for line in result[0]:
                 if line:

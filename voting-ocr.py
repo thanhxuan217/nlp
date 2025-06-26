@@ -7,6 +7,7 @@ from ocr.easy_ocr import ocr_easyocr
 from ocr.tesseract_ocr import ocr_tesseract
 from ocr.tro_ocr import ocr_trocr
 
+# ------------------Incomplete----------------------------
 
 # Thư mục chứa ảnh đầu vào và thư mục lưu đầu ra 
 input_folder = "./resized_img"
@@ -21,26 +22,26 @@ for filename in sorted(os.listdir(input_folder)):
         
         all_ocr_results = []
 
-        print("  🔤 Chạy Tesseract OCR...")
-        tesseract_results = ocr_tesseract(input_path)
-        all_ocr_results.extend(tesseract_results)
-        for result in tesseract_results:
-            print(f"    {result['engine']}: {result['rec_texts']} {result['rec_polys']} text boxes")
+        # print("  🔤 Chạy Tesseract OCR...")
+        # tesseract_results = ocr_tesseract(input_path)
+        # all_ocr_results.extend(tesseract_results)
+        # for result in tesseract_results:
+        #     print(f"    {result['engine']}: {result['rec_texts']} {result['rec_polys']} text boxes")
 
         print("  🔤 Chạy PaddleOCR...")
         paddle_result = ocr_paddleocr(input_path)
         all_ocr_results.append(paddle_result)
         print(f"    {paddle_result['engine']}: {paddle_result['rec_texts']} {paddle_result['rec_polys']} text boxes")    
 
-        print("  🔤 Chạy EasyOCR...")
-        easy_result = ocr_easyocr(input_path)
-        all_ocr_results.append(easy_result)
-        print(f"    {easy_result['engine']}: {easy_result['rec_texts']} {easy_result['rec_polys']} text boxes")        
+        # print("  🔤 Chạy EasyOCR...")
+        # easy_result = ocr_easyocr(input_path)
+        # all_ocr_results.append(easy_result)
+        # print(f"    {easy_result['engine']}: {easy_result['rec_texts']} {easy_result['rec_polys']} text boxes")        
 
-        print("  🔤 Chạy TrOCR...")
-        trocr_result = ocr_trocr(input_path)
-        all_ocr_results.append(trocr_result)
-        print(f"    {trocr_result['engine']}: {trocr_result['rec_texts']} {trocr_result['rec_polys']} text boxes")        
+        # print("  🔤 Chạy TrOCR...")
+        # trocr_result = ocr_trocr(input_path)
+        # all_ocr_results.append(trocr_result)
+        # print(f"    {trocr_result['engine']}: {trocr_result['rec_texts']} {trocr_result['rec_polys']} text boxes")        
 
         
         print(all_ocr_results)

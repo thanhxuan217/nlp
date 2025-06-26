@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 import ast
 
-df = pd.read_excel("output_ocr/output_ocr_raw.xlsx")  # Đổi tên file cho phù hợp
+# Write box to image to check the box order
+df = pd.read_excel("output_paddle_ocr_label/output.xlsx")  # Đổi tên file cho phù hợp
 
 def parse_image_box(x):
     try:
@@ -15,7 +16,7 @@ def parse_image_box(x):
         return ast.literal_eval(x)
 
 df['Image box'] = df['Image box'].apply(parse_image_box)
-df_grouped = df.groupby('Uploaded Filename')['Image box'].agg(list).reset_index()
+df_grouped = df.groupby('Image Name')['Image box'].agg(list).reset_index()
 print(df_grouped)
 
 def get_box_color(box_index):
@@ -242,8 +243,8 @@ def create_side_by_side_image(original_image, bbox_image):
 
 # Lặp qua các file
 for idx, row in df_grouped.iterrows():
-    filename = row['Uploaded Filename']
-    match = re.match(r'page(\d+)_res\.png', filename)
+    filename = row['Image Name']
+    match = re.match(r'.*page(\d+)(?:_res)?\.png', filename)
     if not match:
         print(f"❌ Không nhận diện được số trang từ: {filename}")
         continue
@@ -325,7 +326,7 @@ for idx, row in df_grouped.iterrows():
 print("\n🔄 Tạo version chi tiết...")
 
 for idx, row in df_grouped.iterrows():
-    filename = row['Uploaded Filename']
+    filename = row['Image Name']
     match = re.match(r'page(\d+)_res\.png', filename)
     if not match:
         continue

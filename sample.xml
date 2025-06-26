@@ -1,0 +1,22 @@
+<root>
+    <FILE ID="PKS_001">   
+         <!--FILE_ID: Mã PKS_001 này sẽ được T cung cấp. 
+           Ở đây "PKS" để chỉ tác phẩm này thuộc lĩnh vực Triết học, Khổng giáo, dạng txt, cổ đại. 
+           Còn số 001 để chỉ tác phẩm "Đại Học" trong bộ Tứ thư-->
+        <meta>
+            <TITLE>Đại học</TITLE>
+            <VOLUME>Tứ thư</VOLUME>
+            <AUTHOR>Tăng Tử</AUTHOR>
+            <PERIOD>Chiến Quốc</PERIOD>
+            <LANGUAGE>Hán</LANGUAGE>
+            <SOURCE>ctext.org</SOURCE>
+        </meta> 
+       
+        <SECT ID="PKS_001.004"  NAME ="VN_HánVăn_TiểuThuyết_TậpThành" >          
+            <PAGE ID="{PAGE_NUMBER}">
+                <STC ID="{ID}">  <!--STC_ID: Câu đầu tiên (01). Loop here-->
+                </STC>
+            </PAGE>
+        </SECT>
+    </FILE>
+</root>
