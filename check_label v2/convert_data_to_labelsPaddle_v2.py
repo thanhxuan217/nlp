@@ -2,6 +2,7 @@ import pandas as pd
 import re
 import ast
 import numpy as np
+import unicodedata
 
 
 # Hàm sắp xếp các điểm theo quy tắc top-left → top-right → bottom-right → bottom-left
@@ -38,9 +39,13 @@ def convert_data_to_Labeltxt(df, _FolderImagesName_path, _ImageName_Column = "Im
 
         for _, row in group.iterrows():
             points = sort_box(eval(row[f'{_PositionBBoxName_Column}'])) 
-            transcription = row[f'{_OCRName_Column}']
-            
-            page_result.append({"transcription": transcription, "points": points})
+            raw_text = str(row[f'{_OCRName_Column}'])
+            cleaned_text = raw_text.replace('，', ',')  # Thay dấu phẩy tiếng Trung thành tiếng Anh
+            text = unicodedata.normalize('NFKC', cleaned_text)
+            text = text.replace('\\', '\\\\')  # escape backslash trước
+            text = text.replace('"', '\\"')   # escape dấu nháy kép
+            text = text.replace("'", "\\'")   # escape dấu nháy đơn
+            page_result.append({"transcription": text, "points": points})
 
         result_string = "[" + ", ".join(
             [f'{{"transcription": "{item["transcription"]}", "points": {item["points"]}, "difficult": false}}' for item in page_result]
@@ -83,10 +88,10 @@ def main():
     # YOU CAN CHANGE HERE:
 
     # Chỉnh thành tên file Excel ngữ liệu GK
-    result_file_path = '../output_ocr/output_ocr_raw_2.xlsx'
+    result_file_path = '../output_tap_18/xlsx/output_ocr_raw.xlsx'
 
     # Chỉnh thành tên folder chứa thư mục ảnh của bạn
-    folder_images_path = "../images_label"
+    folder_images_path = "../output_tap_18/images_label"
 
     # Chỉnh thành Tên cột của cột chứa "Tên ảnh" trong file Excel của bạn
     _ImageName_Column = "Image Name"

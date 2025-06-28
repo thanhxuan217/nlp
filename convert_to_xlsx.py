@@ -3,19 +3,23 @@ import csv
 import os
 import re
 import pandas as pd
+from utils.clean import clean_ocr_data
+from utils.merge import group_boxes_by_vertical_column, merge_boxes
 from utils.sort_poly import sort_rec_texts_polys
 
-input_dir = "output_paddle"
+input_dir = "./output_tap_18/output_paddle"
+output_dir = "./output_tap_18/xlsx"
 output_rows = []
 
 # Các thành phần mặc định cho mã số
-DOMAIN = "L"      
-SUBDOMAIN = "S"   
-GENRE = "E"       
+DOMAIN = "L"       # Văn học
+SUBDOMAIN = "S"    
+GENRE = "E"        
 FILE_CODE = "001"  
-CHAPTER = "004"    # Tập số 04
-BOOK_NAME = "VN_HanVan_TieuThuyet_TapThanh_04_ThanhXuan"
-
+CHAPTER = "018"    # Tập số 18
+#CHAPTER = "001"
+BOOK_NAME = "VN_HanVan_TieuThuyet_TapThanh_18_ThanhXuan"
+#BOOK_NAME = "VN_HánVăn_TiểuThuyết_TậpThành - 01"
 
 def generate_id(domain, subdomain, genre, file_code, chapter, page, box_index):
     """
@@ -53,27 +57,52 @@ for filename in json_files:
 
     rec_polys = data.get("rec_polys", [])
     rec_texts = data.get("rec_texts", [])
-    rec_scores = data.get("rec_scores", [])
+    rec_scores = data.get("rec_scores", []) # Should be improve later
 
-    sorted_texts, sorted_polys, sorted_scores = sort_rec_texts_polys(rec_texts, rec_polys, rec_scores)
+    # Clean data
+    filtered_polys, filtered_texts, filtered_scores = clean_ocr_data(rec_polys, rec_texts, rec_scores)
+    if not filtered_polys or not filtered_texts or not filtered_scores:
+        continue
+    
+    groups = group_boxes_by_vertical_column(filtered_polys)
+    boxes_merged = []
+    for i, group in enumerate(groups):
+        boxes_merged.append(merge_boxes(group))
+
+    texts_merged = []
+    score_merged = []
+
+    for i, box in enumerate(boxes_merged):
+        # for each box_merged, get all groups[i].
+        # Init groupInx = i, rec_texts_group
+        # Then loop the groups[i] and find group in rec_polys -> index -> rec_texts[index], rec_texts_group += rec_texts[index] + " "
+        rec_texts_group = ""
+        score_group = []
+        for poly in groups[i]:
+            if poly in filtered_polys:
+                idx = filtered_polys.index(poly)
+                rec_texts_group += filtered_texts[idx] + " "
+                score_group.append(filtered_scores[idx])
+
+        texts_merged.append(rec_texts_group.strip())
+        average = sum(score_group) / len(score_group)
+        score_merged.append(average)
+
+    sorted_texts, sorted_polys, sorted_scores = sort_rec_texts_polys(texts_merged, boxes_merged, score_merged)
     
     # Read from right to left
-    for idx in range(len(rec_polys)):
-    # for idx in range(len(rec_polys)):
+    for idx in range(len(sorted_texts)):
         box = sorted_polys[idx]
         text = sorted_texts[idx]
         score = sorted_scores[idx]
 
         id_code = generate_id(DOMAIN, SUBDOMAIN, GENRE, FILE_CODE, CHAPTER, page_number, idx + 1)
 
-
         row = {
             "ID": id_code,
             "Image box": str(box),
             "Hán char": text,
             "Score": score,
-            "Âm Hán Việt": "",
-            "Nghĩa thuần Việt": "",
             "Image Name": generate_filename(BOOK_NAME, page_number)
         }
         output_rows.append(row)
@@ -81,7 +110,7 @@ for filename in json_files:
 
 # Xuất CSV
 df = pd.DataFrame(output_rows)
-df.to_excel("output_ocr/output_ocr_raw_2.xlsx", index=False)
-print(f"✅ Xuất {len(output_rows)} dòng vào file: output_ocr_raw_2.xlsx")
+df.to_excel(output_dir + "/output_ocr_raw.xlsx", index=False)
+print(f"✅ Xuất {len(output_rows)} dòng vào file: output_ocr_raw.xlsx")
 
 

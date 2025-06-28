@@ -27,7 +27,7 @@ def process_images_in_directory(directory_path, output_txt_path):
                 resize_image(image_path, output_file=output_file)
 
 # Thay đường dẫn bằng thư mục chứa hình ảnh và file txt của bạn
-directory_path = './temp copy'
+directory_path = './output_tap_18/images'
 output_txt_path = './resized_output.txt'
 
 process_images_in_directory(directory_path, output_txt_path)
